@@ -1,6 +1,7 @@
 {
   "name": "northstar-commerce",
   "private": true,
+  "type": "module",
   "scripts": {
     "postinstall": "npm --prefix client install && npm --prefix server install",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
@@ -9,5 +10,9 @@
     "build": "npm --prefix client run build",
     "start": "node server/src/index.js"
   },
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "devDependencies": { "concurrently": "^9.0.1", "nodemon": "^3.1.4" }
 }
