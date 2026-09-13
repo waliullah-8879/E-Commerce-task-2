@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { CheckCircle2 } from 'lucide-react';
+import { api } from '../lib/api';
 
 export default function Checkout() {
   const { cart, clearCart } = useCart();
@@ -31,28 +32,14 @@ export default function Checkout() {
     
     setLoading(true);
     try {
-      const token = localStorage.getItem('northstar_token');
-      const res = await fetch('http://localhost:5000/api/orders', {
+      await api('/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           shippingAddress: address,
           phone: phone,
           items: cart.map(item => ({ productId: item._id, qty: item.qty }))
         })
       });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        if (res.status === 409) {
-          throw new Error('Some items in your cart just went out of stock. Please review your cart.');
-        }
-        throw new Error(data.message || 'Checkout failed');
-      }
       
       clearCart();
       setSuccess(true);

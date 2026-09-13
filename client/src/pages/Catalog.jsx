@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import ProductCard from '../components/ProductCard';
 import { useToast } from '../context/ToastContext';
 import { Filter, Search } from 'lucide-react';
+import { api } from '../lib/api';
 
 export default function Catalog() {
   const [products, setProducts] = useState([]);
@@ -20,8 +21,7 @@ export default function Catalog() {
 
   // Fetch distinct categories once
   useEffect(() => {
-    fetch('http://localhost:5000/api/products/categories')
-      .then(r => r.json())
+    api('/products/categories')
       .then(d => setCategories(d.categories || []))
       .catch(() => {});
   }, []);
@@ -35,8 +35,7 @@ export default function Catalog() {
       const params = new URLSearchParams({ page, limit: 8, category, sort });
       if (search) params.append('search', search);
 
-      fetch(`http://localhost:5000/api/products?${params}`)
-        .then(r => r.json())
+      api(`/products?${params}`)
         .then(d => {
           if (cancelled) return;
           setProducts(d.products || []);

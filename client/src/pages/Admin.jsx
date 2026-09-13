@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { api } from '../lib/api';
 
 const EMPTY_FORM = {
   name: '',
@@ -24,26 +25,16 @@ function ProductModal({ initial, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
-      const token = localStorage.getItem('northstar_token');
-      const url = isEdit
-        ? `http://localhost:5000/api/products/${initial._id}`
-        : 'http://localhost:5000/api/products';
+      const path = isEdit ? `/products/${initial._id}` : '/products';
       const method = isEdit ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
+      await api(path, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
           stock: Number(form.stock),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
       showToast(isEdit ? 'Product updated!' : 'Product created!', 'success');
       onSaved();
       onClose();
@@ -227,12 +218,7 @@ export default function Admin() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const token = localStorage.getItem('northstar_token');
-      const res = await fetch('http://localhost:5000/api/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = await api('/orders');
       setOrders(data);
     } catch (err) {
       showToast(err.message, 'error');
@@ -241,9 +227,7 @@ export default function Admin() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products?limit=100');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = await api('/products?limit=100');
       setProducts(data.products);
     } catch (err) {
       showToast(err.message, 'error');
@@ -259,22 +243,10 @@ export default function Admin() {
 
   const updateOrderStatus = async (id, status) => {
     try {
-      const token = localStorage.getItem('northstar_token');
-      const res = await fetch(
-        `http://localhost:5000/api/orders/${id}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status }),
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message);
-      }
+      await api(`/orders/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
       showToast('Order status updated', 'success');
       fetchOrders();
     } catch (err) {
@@ -286,15 +258,7 @@ export default function Admin() {
     if (!window.confirm('Are you sure you want to delete this product?'))
       return;
     try {
-      const token = localStorage.getItem('northstar_token');
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message);
-      }
+      await api(`/products/${id}`, { method: 'DELETE' });
       showToast('Product deleted', 'success');
       fetchProducts();
     } catch (err) {
